@@ -53,7 +53,11 @@ These are the current default plugins:
 To make limbo use the SLACK_TOKEN of the user while running in sudo, 
 
 shivani$ env |grep SLACK_TOKEN
+
 SLACK_TOKEN=xoxb-...
+
 shivani$ sudo -i -u shivani env |grep SLACK_TOKEN
+
 SLACK_TOKEN=xoxb-...
+
 shivani$ sudo -E make run
