@@ -5,7 +5,7 @@ import re
 
 def on_message(msg, server):
     text = msg.get("text", "")
-    match = re.findall(r"!standup (.*)", text)
+    match = re.findall(r"(.*) standup", text)
     if not match:
         return
-    return "Alright, It's stand up time!" 
+    return "Alright, It's standup time!" 
