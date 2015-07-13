@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""!aws <command> returns the output of aws command"""
+"""!aws <command> returns information on ec2 instances based on given command"""
 
 import boto3
 import re
@@ -84,12 +84,3 @@ def on_message(msg, server):
         return
     
     
-  
-    
-    #s3 = boto3.resource('s3')
-    #name = []
-    #for bucket in s3.buckets.all():
-        #name.append(bucket.name)
-    #n = len(name)
-    #return "There are " + str(n) + " servers running"
-    #return "\n".join(name)
