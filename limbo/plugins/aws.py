@@ -63,15 +63,18 @@ def _count(state=None, tag=None):
     if state:
         instances = ec2.instances.filter(
             Filters=[{'Name': 'instance-state-name', 'Values': [state]}])
+        response = "There are {} servers in {} state right now".format(len(instances), state)
     else:
         if tag:
             key,value = tag.split(":")
             instances = ec2.instances.filter(
                 Filters=[{'Name': 'tag:{}'.format(key), 'Values': [value]}])
+            response = "There are {} servers with {} tag right now".format(len(instances), tag)
         else:
             instances = ec2.instances.all()
+            response = "There are {} servers with {} tag right now".format(len(instances), tag)
 
-    return "There are {} servers in {} state right now".format(len(instances))
+    return response
 
 
 def _details(state=None, tag=None, age=None):
