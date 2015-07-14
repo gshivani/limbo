@@ -22,16 +22,14 @@ def instance_details(instance, instance_running_details, instance_not_running_de
 
     return [instance_not_running_details, instance_running_details]
 
+
 def on_message(msg, server):
     text = msg.get("text", "")
     instance_id = []
     ec2 = boto3.resource('ec2')
     #Counts the ec2 instances
     if re.match(r"^!aws count server$", text):
-        instances = ec2.instances.all()
-        for instance in instances:
-            instance_id.append(instance.id)
-        return "There are "+ str(len(instance_id)) + " servers"
+        _count_servers()
     #Counts number of ec2 instances currently running
     elif re.match(r"^!aws count server running$", text):
         instances = ec2.instances.filter(
@@ -96,5 +94,6 @@ def on_message(msg, server):
             return "Just give me !aws <instance_id_1, instance_id_2, ...>"
     else:
         return
-    
-    
+
+def _count_servers():
+    return "There are {} servers".format(len(ec2.instances.all()))
