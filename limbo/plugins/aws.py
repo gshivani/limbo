@@ -36,17 +36,13 @@ def on_message(msg, server):
         _count_servers(state='running')
     #Counts the ec2 instances with given tag (Key:Value)
     elif re.match(r"^!aws count server with tag (.*)", text):
-        try:
-            key_value = text.rsplit(None, 1)[-1]
-            key,value = key_value.split(":")
-            instances = ec2.instances.filter(
-                Filters=[{'Name': 'tag:'+key, 'Values': [value]}])
-            for instance in instances:
-                instance_id.append(instance.id)
-            return "There are "+ str(len(instance_id)) + \
-            " servers with tag " + key + ":" + value
-        except ValueError:
+        tag = re.findall(r"^!aws count server with tag (.*)", text)
+        test = re.compile('.*:.*')
+
+        if test.match(tag) is None:
             return "You have to give me a tag - <key:value>"
+        else:
+            _count_servers(tag=tag)
     #Displays the details (instance id, instance name and launch time) for the      instance with given tag
     elif re.match(r"^!aws details server with tag (.*)$", text):
        try:
@@ -92,11 +88,16 @@ def on_message(msg, server):
     else:
         return
 
-def _count_servers(state='any'):
-    if state == 'any':
-        instances = ec2.instances.all()
-    else:
+def _count_servers(state=None, tag=None):
+    if state:
         instances = ec2.instances.filter(
             Filters=[{'Name': 'instance-state-name', 'Values': [state]}])
+    else:
+        if tag:
+            key,value = tag.split(":")
+            instances = ec2.instances.filter(
+                Filters=[{'Name': 'tag:{}'.format(key), 'Values': [value]}])
+        else:
+            instances = ec2.instances.all()
 
     return "There are {} servers in {} state right now".format(len(instances))
