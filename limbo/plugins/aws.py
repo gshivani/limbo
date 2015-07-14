@@ -23,7 +23,7 @@ def on_message(msg, server):
             instance_id.append(instance.id)
         return "There are " + str(len(instance_id)) + " servers running right now"
     #Counts the ec2 instances with given tag (Key:Value)
-    elif re.match(r"!aws count server with tag (.*)", text):
+    elif re.match(r"^!aws count server with tag (.*)", text):
         try:
             key_value = text.rsplit(None, 1)[-1]
             key,value = key_value.split(":")
@@ -68,8 +68,6 @@ def on_message(msg, server):
             instance_running_details = []
             instance_not_running_details = []
             instances = ec2.instances.all()
-            if bool(instances):
-                return "No server launched " + age + " days ago."
             for instance in instances:
                 lt = instance.launch_time
                 if (lt.date() == date.today() - timedelta(days=int(age))):
@@ -85,9 +83,9 @@ def on_message(msg, server):
                         lt = instance.launch_time
                         instance_running_details.append(lt.strftime('%m/%d/%Y'))
                         instance_running_details.append("\n")
-                    return "Instance Id-" + "-Instance Name-" + "-Launch Time" + "\n" + \
-                    "Running: " + "\n" + " ".join(instance_running_details) + "Not Running: " + \
-                    "\n" + " ".join(instance_not_running_details)  
+            return "Instance Id-" + "-Instance Name-" + "-Launch Time" + "\n" + \
+            "Running: " + "\n" + " ".join(instance_running_details) + "Not Running: " + \
+            "\n" + " ".join(instance_not_running_details)  
         except ValueError:
             return "You have to give me a number like '2'"               
     else:
