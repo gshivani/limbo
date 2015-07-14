@@ -6,19 +6,20 @@ import re
 from datetime import date, timedelta
 
 
-def instance_details(instance,instance_running_details,instance_not_running_details):
-    if (instance.public_dns_name == ''):
-        instance_not_running_details.append(instance.id)
-        instance_not_running_details.append(instance.public_dns_name)
-        lt = instance.launch_time
-        instance_not_running_details.append(lt.strftime('%m/%d/%Y'))
-        instance_not_running_details.append("\n")
-    else:
+def instance_details(instance, instance_running_details, instance_not_running_details):
+    if instance.public_dns_name:
         instance_running_details.append(instance.id)
         instance_running_details.append(instance.public_dns_name)
         lt = instance.launch_time
         instance_running_details.append(lt.strftime('%m/%d/%Y'))
         instance_running_details.append("\n")
+    else:
+        instance_not_running_details.append(instance.id)
+        instance_not_running_details.append(instance.public_dns_name)
+        lt = instance.launch_time
+        instance_not_running_details.append(lt.strftime('%m/%d/%Y'))
+        instance_not_running_details.append("\n")
+
     return [instance_not_running_details, instance_running_details]
 
 def on_message(msg, server):
