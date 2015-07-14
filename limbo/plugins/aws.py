@@ -27,16 +27,13 @@ def on_message(msg, server):
     text = msg.get("text", "")
     instance_id = []
     ec2 = boto3.resource('ec2')
+
     #Counts the ec2 instances
     if re.match(r"^!aws count server$", text):
         _count_servers()
     #Counts number of ec2 instances currently running
     elif re.match(r"^!aws count server running$", text):
-        instances = ec2.instances.filter(
-            Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
-        for instance in instances:
-            instance_id.append(instance.id)
-        return "There are " + str(len(instance_id)) + " servers running right now"
+        _count_servers(state='running')
     #Counts the ec2 instances with given tag (Key:Value)
     elif re.match(r"^!aws count server with tag (.*)", text):
         try:
@@ -95,5 +92,11 @@ def on_message(msg, server):
     else:
         return
 
-def _count_servers():
-    return "There are {} servers".format(len(ec2.instances.all()))
+def _count_servers(state='any'):
+    if state == 'any':
+        instances = ec2.instances.all()
+    else:
+        instances = ec2.instances.filter(
+            Filters=[{'Name': 'instance-state-name', 'Values': [state]}])
+
+    return "There are {} servers in {} state right now".format(len(instances))
