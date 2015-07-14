@@ -7,23 +7,6 @@ from datetime import date, timedelta
 
 STATES = ['pending', 'running', 'shutting-down', 'terminated', 'stopping', 'stopped']
 
-def instance_details(instance, instance_running_details, instance_not_running_details):
-    if instance.public_dns_name:
-        instance_running_details.append(instance.id)
-        instance_running_details.append(instance.public_dns_name)
-        lt = instance.launch_time
-        instance_running_details.append(lt.strftime('%m/%d/%Y'))
-        instance_running_details.append("\n")
-    else:
-        instance_not_running_details.append(instance.id)
-        instance_not_running_details.append(instance.public_dns_name)
-        lt = instance.launch_time
-        instance_not_running_details.append(lt.strftime('%m/%d/%Y'))
-        instance_not_running_details.append("\n")
-
-    return [instance_not_running_details, instance_running_details]
-
-
 def on_message(msg, server):
     text = msg.get("text", "")
     ec2 = boto3.resource('ec2')
@@ -42,10 +25,7 @@ def on_message(msg, server):
         if state not in STATES:
             return "State must be one of: {}".format(STATES.join(' '))
 
-    ##
-    ## Counting servers
-    ##
-
+    # Counting servers
     if re.match(r"^!aws count server$", text):
         if state:
             _count(state=state)
@@ -54,23 +34,11 @@ def on_message(msg, server):
         else:
             _count()
 
-    ##
-    ## Details of servers
-    ##
-
-    if re.match(r"^!aws details server with tag (.*)$", text):
-        _details(tag=tag)
+    # Details of servers
+    if re.match(r"^!aws details.*$", text):
+        if tag:
+            _details(tag=tag)
        try:
-           key_value = text.rsplit(None, 1)[-1]
-           key,value = key_value.split(":")
-           instance_running_details = []
-           instance_not_running_details = []
-           instances = ec2.instances.filter(Filters=[{'Name': 'tag:'+key.title(), 'Values': [value]}])
-           for instance in instances:
-               instance_not_running_details, instance_running_details = instance_details(instance,instance_running_details, instance_not_running_details)    
-           return "Instance Id-" + "-Instance Name-" + "-Launch Time" + "\n" + \
-           "Running: " + "\n" + " ".join(instance_running_details)+ \
-           "Not Running: " + "\n" + " ".join(instance_not_running_details)
        except ValueError:
            return "You have to give me a tag - <key:value>"
     #Displays details of ec2 (instance id, instance name and launch time) of an     instance that has been launched before given number of days.
@@ -116,3 +84,25 @@ def _count(state=None, tag=None):
             instances = ec2.instances.all()
 
     return "There are {} servers in {} state right now".format(len(instances))
+
+def _details(state=None, tag=None):
+    instance_running_details = []
+    instance_not_running_details = []
+
+    if tag:
+        key,value = tag.split(":")
+        instances = ec2.instances.filter(Filters=[{'Name': 'tag:{}'.format(key.title), 'Values': [value]}])
+
+        running     = [instance for i in instances if i.public_dns_name]
+        not_running = [instance for i in instances if not i.public_dns_name]
+
+        response =  "Instance ID--Instance Name--Launch Time\n" + \
+                    "Running:\n"
+        for instance in running:
+            response = response + "{} - {} - {}\n".format(
+                    instance.id, instnace.public_dns_name, instance.launch_time.strftime('%m/%d/%Y'))
+        for instance in not_running:
+            response = response + "{} - {}\n".format(
+                    instance.id, instance.launch_time.strftime('%m/%d/%Y'))
+
+        return response
