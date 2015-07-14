@@ -5,6 +5,7 @@ import boto3
 import re
 from datetime import date, timedelta
 
+STATES = ['pending', 'running', 'shutting-down', 'terminated', 'stopping', 'stopped']
 
 def instance_details(instance, instance_running_details, instance_not_running_details):
     if instance.public_dns_name:
@@ -25,26 +26,40 @@ def instance_details(instance, instance_running_details, instance_not_running_de
 
 def on_message(msg, server):
     text = msg.get("text", "")
-    instance_id = []
     ec2 = boto3.resource('ec2')
+    instance_id = []
 
-    #Counts the ec2 instances
-    if re.match(r"^!aws count server$", text):
-        _count_servers()
-    #Counts number of ec2 instances currently running
-    elif re.match(r"^!aws count server running$", text):
-        _count_servers(state='running')
-    #Counts the ec2 instances with given tag (Key:Value)
-    elif re.match(r"^!aws count server with tag (.*)", text):
-        tag = re.findall(r"^!aws count server with tag (.*)", text)
-        test = re.compile('.*:.*')
+    # Extract various features of the text
+    tag = re.findall(r"^!aws.*tag (.*)$", text)
+    state = re.findall(r"^!aws.*state (.*)$", text)
 
-        if test.match(tag) is None:
+    if tag:
+        pattern = re.compile('.*:.*')
+        if pattern.match(tag) is None:
             return "You have to give me a tag - <key:value>"
+
+    if state:
+        if state not in STATES:
+            return "State must be one of: {}".format(STATES.join(' '))
+
+    ##
+    ## Counting servers
+    ##
+
+    if re.match(r"^!aws count server$", text):
+        if state:
+            _count(state=state)
+        elif tag:
+            _count(tag=tag)
         else:
-            _count_servers(tag=tag)
-    #Displays the details (instance id, instance name and launch time) for the      instance with given tag
-    elif re.match(r"^!aws details server with tag (.*)$", text):
+            _count()
+
+    ##
+    ## Details of servers
+    ##
+
+    if re.match(r"^!aws details server with tag (.*)$", text):
+        _details(tag=tag)
        try:
            key_value = text.rsplit(None, 1)[-1]
            key,value = key_value.split(":")
@@ -88,7 +103,7 @@ def on_message(msg, server):
     else:
         return
 
-def _count_servers(state=None, tag=None):
+def _count(state=None, tag=None):
     if state:
         instances = ec2.instances.filter(
             Filters=[{'Name': 'instance-state-name', 'Values': [state]}])
