@@ -13,8 +13,9 @@ def on_message(msg, server):
     instance_id = []
 
     # Extract various features of the text
-    tag = re.findall(r"^!aws.*tag (.*)$", text)
+    tag   = re.findall(r"^!aws.*tag (.*)$", text)
     state = re.findall(r"^!aws.*state (.*)$", text)
+    age   = re.findall(r"^!aws.*age days (.*)$", text)
 
     if tag:
         pattern = re.compile('.*:.*')
@@ -24,6 +25,11 @@ def on_message(msg, server):
     if state:
         if state not in STATES:
             return "State must be one of: {}".format(STATES.join(' '))
+
+    if age:
+        pattern = re.compile('\d+')
+        if pattern.match(age) is None:
+            return "You have to give a numeric age (in days)"
 
     # Counting servers
     if re.match(r"^!aws count server$", text):
@@ -38,25 +44,8 @@ def on_message(msg, server):
     if re.match(r"^!aws details.*$", text):
         if tag:
             _details(tag=tag)
-       try:
-       except ValueError:
-           return "You have to give me a tag - <key:value>"
-    #Displays details of ec2 (instance id, instance name and launch time) of an     instance that has been launched before given number of days.
-    elif re.match(r"^!aws details server with age days (.*)$", text):
-        try:
-            age = text.rsplit(None, 1)[-1]
-            instance_running_details = []
-            instance_not_running_details = []
-            instances = ec2.instances.all()
-            for instance in instances:
-                lt = instance.launch_time
-                if (lt.date() == date.today() - timedelta(days=int(age))):
-                    instance_not_running_details, instance_running_details = instance_details(instance, instance_running_details, instance_not_running_details )                     
-            return "Instance Id-" + "-Instance Name-" + "-Launch Time" + "\n" + \
-            "Running: " + "\n" + " ".join(instance_running_details) + "Not Running: " + \
-            "\n" + " ".join(instance_not_running_details)
-        except ValueError:
-            return "You have to give me a number like '2'"
+        elif age:
+            _details(age=age)
     elif re.match(r"^!aws (.*)$", text):
         try:
             remove_aws = text.split(' ', 1)[1]
@@ -85,24 +74,36 @@ def _count(state=None, tag=None):
 
     return "There are {} servers in {} state right now".format(len(instances))
 
-def _details(state=None, tag=None):
+def _details(state=None, tag=None, age=None):
     instance_running_details = []
     instance_not_running_details = []
 
     if tag:
         key,value = tag.split(":")
         instances = ec2.instances.filter(Filters=[{'Name': 'tag:{}'.format(key.title), 'Values': [value]}])
+    else:
+        instances = ec2.instances.all()
 
+    if age:
+        # First the rough filter
+        running     = [instance for i in instances if i.public_dns_name]
+        not_running = [instance for i in instances if not i.public_dns_name]
+        # Now filter by age
+        running     = [instance for i in running if
+                i.launch_time.date() == date.today() - timedelta(days=int(age))]
+        not_running = [instance for i in not_running if
+                i.launch_time.date() == date.today() - timedelta(days=int(age))]
+    else:
         running     = [instance for i in instances if i.public_dns_name]
         not_running = [instance for i in instances if not i.public_dns_name]
 
-        response =  "Instance ID--Instance Name--Launch Time\n" + \
-                    "Running:\n"
-        for instance in running:
-            response = response + "{} - {} - {}\n".format(
-                    instance.id, instnace.public_dns_name, instance.launch_time.strftime('%m/%d/%Y'))
-        for instance in not_running:
-            response = response + "{} - {}\n".format(
-                    instance.id, instance.launch_time.strftime('%m/%d/%Y'))
+    response =  "Instance ID--Instance Name--Launch Time\n" + \
+                "Running:\n"
+    for instance in running:
+        response = response + "{} - {} - {}\n".format(
+                instance.id, instance.public_dns_name, instance.launch_time.strftime('%m/%d/%Y'))
+    for instance in not_running:
+        response = response + "{} - {}\n".format(
+                instance.id, instance.launch_time.strftime('%m/%d/%Y'))
 
-        return response
+    return response
