@@ -30,7 +30,7 @@ def on_message(msg, server):
     if age:
         pattern = re.compile('\d+')
         if pattern.match(age) is None:
-            return "ERROR: Age must be a numeric in days. Ex: (age 5)" 
+            return "ERROR: Age must be a numeric in days. Ex: (age 5)"
 
     if instance:
         pattern = re.compile('i-.*')
