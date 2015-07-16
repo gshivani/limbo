@@ -93,13 +93,17 @@ def _details(instance=None, tag=None, age=None):
         else:
             instances = ec2.instances.all()
 
-        running     = [i for i in instances if i.public_dns_name]
-        not_running = [i for i in instances if not i.public_dns_name]
+        running     = sorted([i for i in instances if i.public_dns_name],
+                        key=lambda i : i.launch_time.date(), reverse=True)
+         
+        not_running = sorted([i for i in instances if not i.public_dns_name], 
+                        key=lambda i : i.launch_time.date(), reverse=True)
 
         if age:
         # refilter by age
             running     = [i for i in running if
                     i.launch_time.date() < date.today() - timedelta(days=int(age))]
+            
             not_running = [i for i in not_running if
                     i.launch_time.date() < date.today() - timedelta(days=int(age))]
 
