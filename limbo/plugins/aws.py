@@ -55,7 +55,7 @@ def on_message(msg, server):
         elif age:
             return _details(age=age[0])
         elif instance:
-            return _details(instance=instance[0])
+            return _details(instance=instance)
         else:
             return
 
@@ -82,14 +82,12 @@ def _count(state=None, tag=None):
 
 
 def _details(instance=None, tag=None, age=None):
-    instance_running_details = []
-    instance_not_running_details = []
     try:
         if tag:
             key,value = tag.split(":")
             instances = ec2.instances.filter(Filters=[{'Name': 'tag:{}'.format(key.title()), 'Values': [value]}])
         elif instance:
-            instances = ec2.instances.filter(InstanceIds=List(instance))
+            instances = ec2.instances.filter(InstanceIds=instance)
         else:
             instances = ec2.instances.all()
 
@@ -110,6 +108,9 @@ def _details(instance=None, tag=None, age=None):
         response =  "Instance ID--Instance Name--Launch Time\n" + \
                 "Running:\n"
         for instance in running:
+            name_tag = next(t for t in instance.tags if t['Key'] == 'Name')
+            if name_tag:
+                response = response + "Name: {}\n".format(name_tag['Value'])
             response = response + "{} - {} - {}\n".format(
                     instance.id, instance.public_dns_name, instance.launch_time.strftime('%m/%d/%Y'))
         
