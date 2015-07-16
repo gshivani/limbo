@@ -39,6 +39,7 @@ These are the current default plugins:
 * [weather](https://github.com/llimllib/limbo/wiki/Weather-Plugin)
 * [wiki](https://github.com/llimllib/limbo/wiki/Wiki-Plugin)
 * [youtube](https://github.com/llimllib/limbo/wiki/Youtube-Plugin)
+
 ---
 
 ## Contributors
