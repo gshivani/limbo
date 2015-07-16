@@ -13,6 +13,11 @@
 
 ![kitten mittens](http://i.imgur.com/xhmD6QO.png)
 
+## AWS Plugin
+
+You can use `!aws help` command to print out all available commands in aws plugin.
+
+![Alt text](https://github.com/gshivani/limbo/blob/master/docs/aws.png?raw=true "AWS Plugin")
 ## Commands
 
 It's super easy to add your own commands! Just create a python file in the plugins directory with an `on_message` function that returns a string.
@@ -34,7 +39,6 @@ These are the current default plugins:
 * [weather](https://github.com/llimllib/limbo/wiki/Weather-Plugin)
 * [wiki](https://github.com/llimllib/limbo/wiki/Wiki-Plugin)
 * [youtube](https://github.com/llimllib/limbo/wiki/Youtube-Plugin)
-
 ---
 
 ## Contributors
