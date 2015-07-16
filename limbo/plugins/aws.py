@@ -16,7 +16,7 @@ def on_message(msg, server):
     # Extract various features of the text
     tag      = re.findall(r"^!aws.*tag (.*)$", text)
     state    = re.findall(r"^!aws.*state (.*)$", text)
-    age      = re.findall(r"^!aws.*age days (.*)$", text)
+    age      = re.findall(r"^!aws.*older than (.*) days$", text)
     instance = re.findall(r"^!aws.*instance (.*)$", text)
     
     if tag:
@@ -99,9 +99,9 @@ def _details(instance=None, tag=None, age=None):
         if age:
         # refilter by age
             running     = [i for i in running if
-                    i.launch_time.date() == date.today() - timedelta(days=int(age))]
+                    i.launch_time.date() < date.today() - timedelta(days=int(age))]
             not_running = [i for i in not_running if
-                    i.launch_time.date() == date.today() - timedelta(days=int(age))]
+                    i.launch_time.date() < date.today() - timedelta(days=int(age))]
 
         response =  "Instance ID--Instance Name--Launch Time\n" + \
                 "Running:\n"
